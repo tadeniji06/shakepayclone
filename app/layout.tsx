@@ -8,8 +8,8 @@ const figtree = Figtree({
 });
 
 export const metadata: Metadata = {
-	title: "Shakepay Clone",
-	description: "Clone of shakepay.com/signin",
+	title: "Shakepay",
+	description: "shakepay.com/signin",
 };
 
 export default function RootLayout({
